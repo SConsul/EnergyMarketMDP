@@ -4,7 +4,6 @@ from agent import Agent
 import matplotlib.pyplot as plt
 
 market1 = Market(1)
-market1.init_day(0)
 der1 = DER(power_capacity = 100 ,energy_capacity = 400)
 
 agent1 = Agent(nb_states=der1.nb_states(),nb_actions=der1.nb_actions())
