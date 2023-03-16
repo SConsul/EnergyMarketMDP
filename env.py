@@ -2,6 +2,10 @@ import numpy as np
 import pandas as pd
 import os
 
+import numpy as np
+import pandas as pd
+import os
+
 class Market(object):
     def __init__(self,seed, num_panels=100):
         self.t = 0
@@ -38,7 +42,8 @@ class Market(object):
 
 
     def price_from_duck_curve(self, hour): #price is $/kWh
-        return 0.20 + 0.1*float(self.global_demand[hour])/22000.0
+        rand_num = self.rng.random()
+        return 0.20 + 0.1*float(self.global_demand[hour])*(1+0.10*rand_num)/22000.0
 
     def step(self,episode):
         if self.t == 24 or self.cloudy is None:
