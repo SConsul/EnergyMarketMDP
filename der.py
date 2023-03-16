@@ -1,7 +1,8 @@
 class DER(object):
-    def __init__(self,power_capacity,energy_capacity):
+    def __init__(self,power_capacity,energy_capacity,energy_demand):
         self.power_cap = power_capacity
         self.energy_cap = energy_capacity
+        self.energy_dem = energy_demand
     
     def nb_states(self):
         '''The state of the system can go from 0 (completely
