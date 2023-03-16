@@ -3,9 +3,11 @@ import der
 import env
 
 class Agent(object):
-    def __init__(self,nb_states,nb_actions):
+    def __init__(self,nb_states,nb_actions,demand,h_demand):
         self.nb_states = nb_states
         self.nb_actions = nb_actions
+        self.demand = demand
+        self.h_demand = h_demand
         self.Q = np.zeros((nb_states,nb_actions))
         self.policy = np.zeros(nb_states)
         self.gamma = 0.95
@@ -37,11 +39,14 @@ class Agent(object):
         energy_cap = der.energy_cap
         power_cap = der.power_cap
         for i in range(k):
-            price, power_supplied = market.step(episode)
+            price, power_supplied, t0 = market.step(episode)
             power_supplied = int(power_supplied)
             self.greedy_policy(s,power_supplied,power_cap,energy_cap)
             a = self.policy[s]
             r = -1*(a-der.power_cap)*price
+            if t0 <= self.h_demand:
+                if s<self.demand:
+                    r-=(self.demand-s)*price*2*t0/self.h_demand
             sp = s + (a-der.power_cap) + power_supplied
             a = int(a)
             sp = int(sp)
