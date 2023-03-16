@@ -2,10 +2,6 @@ import numpy as np
 import pandas as pd
 import os
 
-import numpy as np
-import pandas as pd
-import os
-
 class Market(object):
     def __init__(self,seed, num_panels=100):
         self.t = 0
@@ -52,7 +48,7 @@ class Market(object):
         hour = self.t % 24
         price = self.price_from_duck_curve(hour)
         power_supply = self.solar_power(hour)
-        
+        t0= self.t
         self.t +=1
 
-        return price, power_supply
+        return price, power_supply,t0
