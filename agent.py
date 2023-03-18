@@ -7,15 +7,6 @@ import random
 import seaborn 
 
 class Agent(object):
-    def __init__(self):
-        pass
-        
-    def update(self,s,a,r,sp):
-        pass
-        
-    def act(self,s,power_supplied,power_cap,energy_cap):
-        pass
-    
     def learn(self,k,market,der):
         scores = [] # list containing score from each episode
         scores_window = []

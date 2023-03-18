@@ -17,8 +17,9 @@ class q_learning_agent(Agent):
     def update(self,s,a,r,sp):
         self.Q[s,a] += self.alpha*(r + self.gamma*max(self.Q[sp,:]) - self.Q[s, a])
     
-    def step(self, state, action, reward, next_step, done):
-        pass
+    def step(self, state, action, reward, next_state, done):
+        self.update(int(state[0]), action, reward, int(next_state[0]))
+
     def act(self,s,power_supplied,power_cap,energy_cap):
         rand_v = np.random.uniform(0,1)
         s = int(s[0])
@@ -30,5 +31,4 @@ class q_learning_agent(Agent):
             a = power_cap - s - power_supplied
         if s + (a-power_cap) + power_supplied > energy_cap:
             a = energy_cap + power_cap - s - power_supplied
-            print('too big')
-        return a
+        return a    
