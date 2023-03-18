@@ -13,13 +13,13 @@ market = Market(1)
 der = DER(power_capacity = 100 ,energy_capacity = 400, energy_demand = 100, h_demand=18)
 gamma = 0.95
 agent1 = q_learning_agent(nb_states=der.nb_states(),nb_actions=der.nb_actions(),
-               gamma=gamma, demand=der.energy_dem,h_demand=der.h_demand, n_episodes=15)
+               gamma=gamma, demand=der.energy_dem,h_demand=der.h_demand, price_penalty=3.0, n_episodes=15)
 a1_scores = agent1.learn(24,market,der)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 agent2 = DQNAgent(state_size=1,action_size=der.nb_actions(),gamma=gamma, n_episodes=15, 
                   eps_start=1.0, eps_decay=0.996, eps_end=0.01, seed= 42,demand=der.energy_dem,
-                  h_demand=der.h_demand, device=device)
+                  h_demand=der.h_demand, price_penalty=3.0, device=device)
 
 a2_scores = agent2.learn(24,market,der)
 fig = plt.figure()

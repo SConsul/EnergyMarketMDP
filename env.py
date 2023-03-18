@@ -48,7 +48,6 @@ class Market(object):
         hour = self.t % 24
         price = self.price_from_duck_curve(hour)
         power_supply = self.solar_power(hour)
-        t0= self.t
         self.t +=1
 
-        return price, power_supply,t0
+        return price, power_supply

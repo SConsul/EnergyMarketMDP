@@ -8,6 +8,7 @@ import seaborn
 
 class Agent(object):
     def learn(self,k,market,der):
+
         scores = [] # list containing score from each episode
         scores_window = []
         episode_list = list(range(23))
@@ -23,13 +24,16 @@ class Agent(object):
             power_cap = der.power_cap
             market.init_day(i_episode)
             for i in range(k):
-                price, power_supplied, done = market.step(i_episode)
+                price, power_supplied = market.step(i_episode)
                 power_supplied = int(power_supplied)
                 action = self.act(state,power_supplied,power_cap,energy_cap)
                 reward = -1*(action-power_cap)*price
+
+                if market.t <= self.h_demand and state<self.demand:
+                    reward -= (self.demand-state)*price*self.price_penalty*market.t/self.h_demand
                 next_state = state + (action-power_cap) + power_supplied
                 
-                self.step(state,action,reward,next_state,done)
+                self.step(state,action,reward,next_state,0)
                 state = next_state
                 score += reward
                 scores_window.append(score) ## save the most recent score
@@ -55,10 +59,12 @@ class Agent(object):
             power_cap = der.power_cap
             market.init_day(i_episode)
             for i in range(k):
-                price, power_supplied, done = market.step(i_episode)
+                price, power_supplied = market.step(i_episode)
                 power_supplied = int(power_supplied)
                 action = self.act(state,power_supplied,power_cap,energy_cap)
                 reward = -1*(action-power_cap)*price
+                if market.t <= self.h_demand and state<self.demand:
+                    reward -= (self.demand-state)*price*self.price_penalty*market.t/self.h_demand
                 next_state = state + (action-power_cap) + power_supplied
                 state = next_state
                 score += reward

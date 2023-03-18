@@ -16,7 +16,8 @@ UPDATE_EVERY = 4        # how often to update the network
 class DQNAgent(Agent):
     """Interacts with and learns form environment."""
     
-    def __init__(self, state_size, action_size, gamma, eps_start, eps_decay, eps_end, seed, demand,h_demand, n_episodes, device):
+    def __init__(self, state_size, action_size, gamma, eps_start, eps_decay, eps_end, seed, 
+                 demand, h_demand, price_penalty, n_episodes, device):
         """Initialize an Agent object.
         
         Params
@@ -28,6 +29,7 @@ class DQNAgent(Agent):
         self.device = device
         self.state_size = state_size
         self.action_size = action_size
+        self.price_penalty = price_penalty
         self.seed = random.seed(seed)
         self.eps = eps_start
         self.eps_decay = eps_decay
