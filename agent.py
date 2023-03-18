@@ -1,60 +1,46 @@
 import numpy as np
 import der
 import env
+import torch
 
 class Agent(object):
-    def __init__(self,nb_states,nb_actions,demand,h_demand):
-        self.nb_states = nb_states
-        self.nb_actions = nb_actions
-        self.demand = demand
-        self.h_demand = h_demand
-        self.Q = np.zeros((nb_states,nb_actions))
-        self.policy = np.zeros(nb_states)
-        self.gamma = 0.95
-        self.alpha = 0.2
-        self.eps = 0.1
+    def __init__(self):
+        pass
         
-    def update_Q_learning(self,s,a,r,sp):
-        self.Q[s,a] += self.alpha*(r + self.gamma*max(self.Q[sp,:]) - self.Q[s, a])
+    def update(self,s,a,r,sp):
+        pass
         
-    def greedy_policy(self,s,power_supplied,power_cap,energy_cap):
-        rand_v = np.random.uniform(0,1)
-        if rand_v < self.eps:
-            self.policy[s] = np.random.randint(0,self.nb_actions)
-        else:
-            self.policy[s] = np.argmax(self.Q[s])
-        if s + (self.policy[s]-power_cap) + power_supplied < 0:
-            self.policy[s] = power_cap - s - power_supplied
-        if s + (self.policy[s]-power_cap) + power_supplied > energy_cap:
-            self.policy[s] = energy_cap + power_cap - s - power_supplied
-            print('too big')
+    def act(self,s,power_supplied,power_cap,energy_cap):
+        pass
     
-    def Q_learning(self,k,market,der,episode):
-        s = 0
-        list_hour = []
-        list_price = []
-        list_power_supplied = []
-        list_actions = []
-        list_s = []
-        energy_cap = der.energy_cap
-        power_cap = der.power_cap
-        for i in range(k):
-            price, power_supplied, t0 = market.step(episode)
-            power_supplied = int(power_supplied)
-            self.greedy_policy(s,power_supplied,power_cap,energy_cap)
-            a = self.policy[s]
-            r = -1*(a-der.power_cap)*price
-            if t0 <= self.h_demand:
-                if s<self.demand:
-                    r-=(self.demand-s)*price*2*t0/self.h_demand
-            sp = s + (a-der.power_cap) + power_supplied
-            a = int(a)
-            sp = int(sp)
-            self.update_Q_learning(s,a,r,sp)
-            list_hour.append(market.t)
-            list_price.append(price)
-            list_power_supplied.append(power_supplied)
-            list_actions.append(a-der.power_cap)
-            list_s.append(s)
-            s = sp
-        return list_hour, list_price, list_power_supplied, list_actions, list_s
+    def learn(self,k,market,der,episode):
+        scores = [] # list containing score from each episode
+        scores_window = []
+        for i_episode in range(1, self.n_episodes+1):
+            state = np.zeros(1) #env.reset()
+            score = 0
+            energy_cap = der.energy_cap
+            power_cap = der.power_cap
+            for i in range(k):
+                price, power_supplied, done = market.step(i_episode)
+                power_supplied = int(power_supplied)
+                action = self.act(state,power_supplied,power_cap,energy_cap)
+                reward = -1*(action-power_cap)*price
+                print(state,action,power_cap, power_supplied)
+                next_state = state + (action-power_cap) + power_supplied
+                
+                self.step(state,action,reward,next_state,done)
+                state = next_state
+                score += reward
+                scores_window.append(score) ## save the most recent score
+                scores.append(score) ## sae the most recent score
+                print('\rEpisode {}\tAverage Score {:.2f}'.format(i_episode,np.mean(scores_window)), end="")
+                if i_episode %100==0:
+                    print('\rEpisode {}\tAverage Score {:.2f}'.format(i_episode,np.mean(scores_window)))
+                    
+                if np.mean(scores_window)>=200.0:
+                    print('\nEnvironment solve in {:d} epsiodes!\tAverage score: {:.2f}'.format(i_episode-100,
+                                                                                            np.mean(scores_window)))
+                    torch.save(self.qnetwork_local.state_dict(),'checkpoint.pth')
+                    break
+        return scores
