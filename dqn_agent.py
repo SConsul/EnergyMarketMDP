@@ -51,6 +51,7 @@ class DQNAgent(Agent):
                 experience = self.memory.sample()
                 states, actions, rewards, next_state = experience
                 self.update(states, actions, rewards, next_state)
+                
     def act(self, state, power_supplied, power_cap, energy_cap):
         """Returns action for given state as per current policy """
         state = torch.from_numpy(state).float().unsqueeze(0).to(self.device)
@@ -65,15 +66,15 @@ class DQNAgent(Agent):
         else:
             a = random.choice(np.arange(self.action_size))
 
-        # s = state[0]    
-        # if s + (a-power_cap) + power_supplied < 0:
-        #     a = power_cap - s - power_supplied
-        # if s + (a-power_cap) + power_supplied > energy_cap:
-        #     a = energy_cap + power_cap - s - power_supplied
-        #     print('too big')
-
+        s = state.item() 
+        if s + (a-power_cap) + power_supplied < 0:
+            a = power_cap - s - power_supplied
+        elif s + (a-power_cap) + power_supplied > energy_cap:
+            a = energy_cap + power_cap - s - power_supplied
+        
         self.eps = max(self.eps*self.eps_decay, self.eps_end)
         return a
+    
     def update(self, states, actions, rewards, next_state):
         """Update value parameters using given batch of experience tuples.
         """
