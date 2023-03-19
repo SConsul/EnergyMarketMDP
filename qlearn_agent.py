@@ -3,7 +3,7 @@ from agent import Agent
 import random
 
 class q_learning_agent(Agent):
-    def __init__(self,nb_states,nb_actions,gamma, demand, h_demand, price_penalty, n_episodes):
+    def __init__(self,nb_states,nb_actions,gamma, demand, h_demand, price_penalty, n_epochs):
         self.nb_states = nb_states
         self.nb_actions = nb_actions
         self.demand = demand
@@ -13,7 +13,7 @@ class q_learning_agent(Agent):
         self.gamma = gamma
         self.alpha = 0.2
         self.eps = 0.1
-        self.n_episodes = n_episodes
+        self.n_epochs = n_epochs
 
     def update(self,s,a,r,sp):
         self.Q[s,a] += self.alpha*(r + self.gamma*max(self.Q[sp,:]) - self.Q[s, a])

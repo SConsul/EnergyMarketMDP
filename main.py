@@ -1,5 +1,7 @@
+import os
+import argparse
 import torch
-import numpy as np
+import random
 from der import DER
 from env import Market
 from dqn_agent import DQNAgent
@@ -8,40 +10,104 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
-market = Market(1)
 
-der = DER(power_capacity = 100 ,energy_capacity = 400, energy_demand = 100, h_demand=18)
-gamma = 0.95
-agent1 = q_learning_agent(nb_states=der.nb_states(),nb_actions=der.nb_actions(),
-               gamma=gamma, demand=der.energy_dem,h_demand=der.h_demand, price_penalty=3.0, n_episodes=15)
-a1_scores = agent1.learn(24,market,der)
+def passed_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--power_capacity', type=int,
+                        default=100, help="Power Capacity")
+    parser.add_argument('--energy_capacity', type=int,
+                        default=400, help="Energy Capacity")
+    parser.add_argument('--energy_demand', type=int,
+                        default=100, help="Energy Demand")
+    parser.add_argument('--h_demand', type=int, default=18,
+                        help="Hour demand is checked")
+    parser.add_argument('--seed', type=int, default=42,
+                        help="seed for replicating randomness")
+    parser.add_argument('--n_epochs', type=int, default=20,
+                        help="number of epochs for training")
+    parser.add_argument('--gamma', type=float,
+                        default=0.95, help="discount factor")
+    parser.add_argument('--penalty_factor', type=float,
+                        default=4.0, help="discount factor")
+    parser.add_argument('--eps_start', type=float, default=1.0)
+    parser.add_argument('--eps_decay', type=float, default=0.996)
+    parser.add_argument('--eps_end', type=float, default=0.01)
+    parser.add_argument('--length_of_day', type=int, default=24)
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-agent2 = DQNAgent(state_size=1,action_size=der.nb_actions(),gamma=gamma, n_episodes=15, 
-                  eps_start=1.0, eps_decay=0.996, eps_end=0.01, seed= 42,demand=der.energy_dem,
-                  h_demand=der.h_demand, price_penalty=3.0, device=device)
+    args = parser.parse_args()
+    return args
 
-a2_scores = agent2.learn(24,market,der)
-fig = plt.figure()
-ax = fig.add_subplot(111)
-plt.plot(np.arange(len(a1_scores)),a1_scores, label="Q Learning")
-plt.plot(np.arange(len(a2_scores)),a2_scores, label="DQN")
-plt.ylabel('Score')
-plt.xlabel('Epsiode #')
-plt.legend()
-plt.show()
 
-#eval
-a1_eval_score = agent1.eval(24,market,der)
-a2_eval_score = agent2.eval(24,market,der)
-print(len(a1_eval_score+a2_eval_score))
-df = pd.DataFrame({'Episode':list(range(23))+list(range(23)),'score':a1_eval_score+a2_eval_score, 'type':['Q Learning']*23 +['DQN']*23})
-print(df)
-fig = plt.figure()
-ax = fig.add_subplot(111)
-g = sns.barplot(data=df, y='score', x='Episode', hue='type')
+def main():
+    args = passed_arguments()
+    random.seed(args.seed)
+    market = Market(1)
 
-g.set_ylabel('Eval Score')
-g.set_xlabel('Epsiode #')
-g.legend(loc='center left', bbox_to_anchor=(1, 0.5), ncol=1)
-plt.show()
+    der = DER(power_capacity=args.power_capacity, energy_capacity=args.energy_capacity,
+              energy_demand=args.energy_demand, h_demand=args.h_demand)
+    gamma = args.gamma
+    agent1 = q_learning_agent(nb_states=der.nb_states(), nb_actions=der.nb_actions(),
+                              gamma=gamma, demand=der.energy_dem, h_demand=der.h_demand, price_penalty=args.penalty_factor,
+                              n_epochs=args.n_epochs)
+    a1_scores = agent1.learn(args.length_of_day, market, der)
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    agent2 = DQNAgent(state_size=1, action_size=der.nb_actions(), gamma=gamma, n_epochs=args.n_epochs,
+                      eps_start=args.eps_start, eps_decay=args.eps_decay, eps_end=args.eps_end,
+                      seed=args.seed, demand=der.energy_dem, h_demand=der.h_demand, price_penalty=args.penalty_factor, device=device)
+
+    a2_scores = agent2.learn(args.length_of_day, market, der)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(list(range(len(a1_scores))), a1_scores, label="Q Learning")
+    ax.plot(list(range(len(a2_scores))), a2_scores, label="DQN")
+    ax.set_ylabel('Score')
+    ax.set_xlabel('Epsiode #')
+    ax.legend()
+    ax.set_title("Training Curves")
+    # plt.show()
+
+    # =======================================
+    # eval
+
+    a1_eval_score = agent1.eval(args.length_of_day, market, der)
+    a2_eval_score = agent2.eval(args.length_of_day, market, der)
+
+    df = pd.DataFrame({'Episode': list(range(args.length_of_day-1))+list(range(args.length_of_day-1)),
+                      'score': a1_eval_score+a2_eval_score, 'type': ['Q Learning']*(args.length_of_day-1) + ['DQN']*(args.length_of_day-1)})
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    g = sns.barplot(data=df, y='score', x='Episode', hue='type')
+
+    g.set_ylabel('Eval Score')
+    g.set_xlabel('Epsiode #')
+    g.legend(loc='center left', bbox_to_anchor=(1, 0.5), ncol=1)
+    g.set(title='Evaluation Scores')
+    # plt.show()
+
+    # Policy of a specific episode
+    num_eps_total = len(os.listdir("./data/data_demand"))
+    episode_id = random.randint(0, num_eps_total-1)
+    s_list, a_list, ps_list, _, p_list = agent2.track_episode(
+        24, episode_id, market, der)
+
+    hr_list = list(range(len(s_list)))
+    fig, ax1 = plt.subplots()
+    ax1.set_xlabel('time (h)')
+    ax1.set_ylabel('price', color='r')
+    ax1.plot(hr_list, p_list, color='r')
+    ax1.tick_params(axis='y', labelcolor='r')
+
+    ax2 = ax1.twinx()
+    #ax2.set_ylabel('sin', color=color)
+    ax2.plot(hr_list, ps_list, label='solar power')
+    ax2.plot(hr_list, a_list, label='actions')
+    ax2.plot(hr_list, s_list, label='charging state')
+
+    fig.tight_layout()
+    plt.legend()
+    plt.show()
+
+
+if __name__ == "__main__":
+    main()

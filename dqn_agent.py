@@ -17,7 +17,7 @@ class DQNAgent(Agent):
     """Interacts with and learns form environment."""
     
     def __init__(self, state_size, action_size, gamma, eps_start, eps_decay, eps_end, seed, 
-                 demand, h_demand, price_penalty, n_episodes, device):
+                 demand, h_demand, price_penalty, n_epochs, device):
         """Initialize an Agent object.
         
         Params
@@ -30,13 +30,13 @@ class DQNAgent(Agent):
         self.state_size = state_size
         self.action_size = action_size
         self.price_penalty = price_penalty
-        self.seed = random.seed(seed)
+        self.seed = seed
         self.eps = eps_start
         self.eps_decay = eps_decay
         self.eps_end = eps_end
         self.demand = demand
         self.gamma = gamma
-        self.n_episodes = n_episodes
+        self.n_epochs = n_epochs
         #Q- Network
         self.qnetwork_local = QNetwork(state_size, action_size, seed).to(device)
         self.qnetwork_target = QNetwork(state_size, action_size, seed).to(device)
