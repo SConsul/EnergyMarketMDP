@@ -4,8 +4,8 @@ import random
 
 class q_learning_agent(Agent):
     def __init__(self,nb_states,nb_actions,gamma, demand, h_demand, price_penalty, n_epochs):
-        self.nb_states = nb_states
-        self.nb_actions = nb_actions
+        self.nb_states = nb_states-1
+        self.nb_actions = nb_actions-1
         self.demand = demand
         self.h_demand = h_demand
         self.price_penalty = price_penalty
@@ -18,7 +18,7 @@ class q_learning_agent(Agent):
     def update(self,s,a,r,sp):
         self.Q[s,a] += self.alpha*(r + self.gamma*max(self.Q[sp,:]) - self.Q[s, a])
     
-    def step(self, state, action, reward, next_state, done):
+    def step(self, state, action, reward, next_state):
         self.update(int(state[0]), action, reward, int(next_state[0]))
 
     def act(self,s,power_supplied,power_cap,energy_cap):
@@ -32,4 +32,4 @@ class q_learning_agent(Agent):
             a = power_cap - s - power_supplied
         if s + (a-power_cap) + power_supplied > energy_cap:
             a = energy_cap + power_cap - s - power_supplied
-        return a    
+        return a
