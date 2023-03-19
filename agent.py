@@ -28,8 +28,8 @@ class Agent(object):
                     if market.t <= self.h_demand and state<self.demand:
                         reward -= (self.demand-state)*price*self.price_penalty*market.t/self.h_demand
                     next_state = state + (action-power_cap) + power_supplied
-                    
-                    self.step(state,action,reward,next_state,0)
+
+                    self.step(state,action,reward,next_state)
                     state = next_state
                     score += reward
             scores.append(score) ## save the most recent score
