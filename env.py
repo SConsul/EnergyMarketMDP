@@ -10,6 +10,7 @@ class Market(object):
         self.num_panels = num_panels
 
     def init_day(self,episode):
+        self.t = 0
         self.cloudy = self.rng.integers(3,10)*self.rng.binomial(1, 0.1) #assume day is cloudy 10% of the time
                                                                         #cloudy>0 ->cloudy (larger == more dense clouds)
         file_list = os.listdir("./data/data_demand")
