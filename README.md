@@ -23,7 +23,7 @@ python main.py [--agent_id] [--power_capacity] [--energy_capacity] [--energy_dem
 
 | Parameter                 | Default       | Description   |	
 | :------------------------ |:-------------:| :-------------|
-|--agent_id| 1 | (int) Choose the type of reinforcement learning agent you want to use (1)Q Learning (2) DQN (3) Baseline|
+|--agent_id| 1 | (int) Choose the type of reinforcement learning agent you want to use: Q Learning (1), DQN (2) or Baseline (3)|
 |--power_capacity| 100 | (int) Set the power capacity for the energy management system.
 |--energy_capacity | 400 | (int) Set the energy capacity for the energy management system.|
 |--energy_demand | 100 | (int) Set the energy demand for the energy management system.|
@@ -41,7 +41,7 @@ python main.py [--agent_id] [--power_capacity] [--energy_capacity] [--energy_dem
 |--batch_size| 32| (int) Set the minibatch size for the DQN agent.|
 |--tau| 0.001 | (float) Set the value of tau for the soft update of target parameters in the DQN agent. |
 |--lr: | 0.005| (float) Set the learning rate for the DQN agent.| 
-|--update_freq | 4 | Set the frequency of updating the network in the DQN agent.|
+|--update_freq | 4 | (int) Set the frequency of updating the network in the DQN agent.|
 
 
 The script will run and output the results of the energy management system.
