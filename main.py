@@ -47,7 +47,10 @@ def passed_arguments():
 def main():
     args = passed_arguments()
     random.seed(args.seed)
-    market = Market(1)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+
+    market = Market(args.seed)
 
     der = DER(power_capacity=args.power_capacity, energy_capacity=args.energy_capacity,
               energy_demand=args.energy_demand, h_demand=args.h_demand)
@@ -64,23 +67,29 @@ def main():
                       seed=args.seed, demand=der.energy_dem, h_demand=der.h_demand, price_penalty=args.penalty_factor, 
                       device=device, buffer_size=args.buffer_size, batch_size=args.batch_size, tau=args.tau, lr=args.lr, update_freq=args.update_freq)
 
+    agent_id = 1
+
+    if agent_id==1:
+        agent = agent1
+    elif agent_id==2:
+        agent = agent2
+
+    a_scores = agent.run(args.length_of_day, market, der, train=True)
     
-    agent = agent2
-    # a_scores = agent.run(args.length_of_day, market, der, train=True)
-    a1_scores = agent1.run(args.length_of_day, market, der, train=True)
-    a2_scores = agent2.run(args.length_of_day, market, der, train=True)
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    ax.plot(list(range(len(a1_scores))), a1_scores, label="Q Learning")
-    ax.plot(list(range(len(a2_scores))), a2_scores, label="DQN")
-    ax.set_ylabel('Score')
-    ax.set_xlabel('Epsiode #')
-    ax.legend()
-    ax.set_title("Training Curves")
-    plt.show()
+    # a1_scores = agent1.run(args.length_of_day, market, der, train=True)
+    # a2_scores = agent2.run(args.length_of_day, market, der, train=True)
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111)
+    # ax.plot(list(range(len(a1_scores))), a1_scores, label="Q Learning")
+    # ax.plot(list(range(len(a2_scores))), a2_scores, label="DQN")
+    # ax.set_ylabel('Score')
+    # ax.set_xlabel('Epsiode #')
+    # ax.legend()
+    # ax.set_title("Training Curves")
+    # plt.show()
 
     # =======================================
-    # eval
+    # comparison of DQN and QLearning
 
     a1_eval_score = agent1.run(args.length_of_day, market, der, train=False)
     # a2_eval_score = agent2.run(args.length_of_day, market, der, train=False)
@@ -100,7 +109,6 @@ def main():
     # Policy of a specific episode
     num_eps_total = len(os.listdir("./data/data_demand"))
     episode_id = random.randint(0, num_eps_total-1)
-    print("Episode"+str(episode_id))
     s_list, a_list, ps_list, _, p_list = agent.run(args.length_of_day, market, der, False, episode_id)
     hr_list = list(range(len(s_list)))
     fig, ax1 = plt.subplots()
@@ -118,7 +126,7 @@ def main():
     ax2.plot(hr_list, a_list, label='actions', color='tab:orange')
     ax2.plot(hr_list, s_list, label='battery level', color='tab:green')
     ax2.plot(hr_list, surplus, label='surplus', color='tab:purple')
-    
+    fig.suptitle('Performance of Agent {} on Episode {}'.format(agent_id, episode_id))
     fig.tight_layout()
     plt.legend()
     plt.show()
