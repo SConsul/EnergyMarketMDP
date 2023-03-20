@@ -8,7 +8,7 @@ class DER(object):
     def nb_states(self):
         '''The state of the system can go from 0 (completely
         discharged) to energy_cap (fully charged)'''
-        return self.energy_cap+1
+        return self.energy_cap
     
     def nb_actions(self):
         '''An action is to charge or discharge the system up to
