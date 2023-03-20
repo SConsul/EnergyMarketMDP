@@ -30,8 +30,8 @@ class Agent(object):
             scores = [] # list containing score from each episode
             score = 0.0
             for i_episode in episode_list:
-                bat_lvl = np.zeros(1) #env.reset()
-                hr = np.zeros(1)
+                bat_lvl = 0.0
+                hr = 0.0
                 energy_cap = der.energy_cap
                 power_cap = der.power_cap
                 market.init_day(i_episode)
@@ -46,12 +46,12 @@ class Agent(object):
                     if market.t <= self.h_demand and bat_lvl<self.demand:
                         reward -= (self.demand-bat_lvl)*price*self.price_penalty*market.t/self.h_demand
                     new_bat_lvl = bat_lvl + (action-power_cap) + power_supplied
-                    next_state = ((hr+1)%24)*400+new_bat_lvl
+                    new_hr = (hr+1)%24
 
                     if train:
-                        self.step(state,action,reward,next_state)
+                        self.step((hr, bat_lvl) ,action,reward,(new_hr,new_bat_lvl))
                     elif episode_id:
-                        state_list.append(bat_lvl[0])
+                        state_list.append(bat_lvl)
                         action_list.append(action-power_cap)
                         reward_list.append(reward)
                         price_list.append(price)

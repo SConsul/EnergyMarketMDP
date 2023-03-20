@@ -19,11 +19,13 @@ class q_learning_agent(Agent):
         self.Q[s,a] += self.alpha*(r + self.gamma*max(self.Q[sp,:]) - self.Q[s, a])
     
     def step(self, state, action, reward, next_state):
-        self.update(int(state[0]), action, reward, int(next_state[0]))
+        s = int(state[0]*400+state[1]) #hr*400 + bat_lvl
+        ns = int(next_state[0]*400+next_state[1])
+        self.update(s, action, reward, ns)
 
     def act(self, hr, bat_lvl, power_supplied,power_cap,energy_cap, demand):
         rand_v = np.random.uniform(0,1)
-        bat_lvl = int(bat_lvl[0])
+        bat_lvl = int(bat_lvl)
         s = hr*400 + bat_lvl
         if rand_v < self.eps:
             a = random.randint(0,self.nb_actions-1)

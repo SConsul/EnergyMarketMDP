@@ -6,55 +6,56 @@ from replay_buffer import ReplayBuffer
 from model import q_network
 from agent import Agent
 
-BUFFER_SIZE = int(1e5)  #replay buffer size
-BATCH_SIZE = 32         # minibatch size
-TAU = 1e-3              # for soft update of target parameters
-LR = 5e-4               # learning rate
-UPDATE_EVERY = 4        # how often to update the network
-
 class DQNAgent(Agent):
     """Interacts with and learns form environment."""
-    def __init__(self, state_size, action_size, gamma, eps_start, eps_decay, eps_end, seed, 
-                 demand, h_demand, price_penalty, n_epochs, device):
+    def __init__(self, state_dim, action_size, gamma, eps_start, eps_decay, eps_end, seed, 
+                 demand, h_demand, price_penalty, n_epochs, device, buffer_size=int(1e5), 
+                 batch_size=32, tau=1e-3, lr=5e-4, update_freq=4):
         """Initialize an Agent object."""
-        self.device = device
-        self.state_size = state_size
+        self.state_dim = state_dim
         self.action_size = action_size
-        self.price_penalty = price_penalty
-        self.seed = seed
+        self.gamma = gamma
         self.eps = eps_start
         self.eps_decay = eps_decay
         self.eps_end = eps_end
+        self.seed = seed
         self.demand = demand
-        self.gamma = gamma
         self.h_demand = h_demand
+        self.price_penalty = price_penalty
         self.n_epochs = n_epochs
+        self.device = device
+        self.buffer_size = buffer_size
+        self.batch_size = batch_size
+        self.tau = tau
+        self.lr = lr
+        self.update_freq = update_freq
+
         #Q- Network
-        self.qnetwork_local = q_network(state_size, action_size, seed).to(device)
-        self.qnetwork_target = q_network(state_size, action_size, seed).to(device)     
-        self.optimizer = optim.Adam(self.qnetwork_local.parameters(),lr=LR)
+        self.qnetwork_local = q_network(state_dim, action_size, seed).to(device)
+        self.qnetwork_target = q_network(state_dim, action_size, seed).to(device)     
+        self.optimizer = optim.Adam(self.qnetwork_local.parameters(),lr=lr)
         
         # Replay memory 
-        self.memory = ReplayBuffer(action_size, BUFFER_SIZE,BATCH_SIZE,seed, self.device)
+        self.memory = ReplayBuffer(action_size, buffer_size, batch_size,seed, self.device)
         self.t_step = 0
         
-    def step(self, state, action, reward, next_step):
+    def step(self, state, action, reward, next_state):
         # Save experience in replay memory
-        self.memory.add(state, action, reward, next_step)
+        self.memory.add(state, action, reward, next_state)
 
         # Learn every UPDATE_EVERY time steps.
-        self.t_step = (self.t_step+1)% UPDATE_EVERY
+        self.t_step = (self.t_step+1)% self.update_freq
         if self.t_step == 0:
             # If enough samples are available in memory, get random subset and learn
 
-            if len(self.memory)>BATCH_SIZE:
+            if len(self.memory)>self.batch_size:
                 experience = self.memory.sample()
                 states, actions, rewards, next_state = experience
                 self.update(states, actions, rewards, next_state)
-                
-    def act(self, state, power_supplied, power_cap, energy_cap):
+
+    def act(self, hr, bat_lvl, power_supplied, power_cap, energy_cap, demand):
         """Returns action for given state as per current policy """
-        state = torch.from_numpy(state).float().unsqueeze(0).to(self.device)
+        state = torch.Tensor([hr/24.0,bat_lvl/400.0]).unsqueeze(0).to(self.device) #normalize state for stablity
         self.qnetwork_local.eval()
         with torch.no_grad():
             action_values = self.qnetwork_local(state)
@@ -66,11 +67,10 @@ class DQNAgent(Agent):
         else:
             a = random.choice(np.arange(self.action_size))
 
-        s = state.item() 
-        if s + (a-power_cap) + power_supplied < 0:
-            a = power_cap - s - power_supplied
-        elif s + (a-power_cap) + power_supplied > energy_cap:
-            a = energy_cap + power_cap - s - power_supplied
+        if bat_lvl + (a-power_cap) + power_supplied - demand < 0:
+            a = power_cap - bat_lvl - power_supplied + demand
+        elif bat_lvl + (a-power_cap) + power_supplied - demand > energy_cap:
+            a = energy_cap + power_cap - bat_lvl - power_supplied + demand
         
         self.eps = max(self.eps*self.eps_decay, self.eps_end)
         return a
@@ -99,7 +99,7 @@ class DQNAgent(Agent):
         self.optimizer.step()
 
         # ------------------- update target network ------------------- #
-        self.soft_update(self.qnetwork_local,self.qnetwork_target,TAU)
+        self.soft_update(self.qnetwork_local,self.qnetwork_target,self.tau)
             
     def soft_update(self, local_model, target_model, tau):
         """Soft update model parameters.

@@ -34,6 +34,11 @@ def passed_arguments():
     parser.add_argument('--eps_decay', type=float, default=0.996)
     parser.add_argument('--eps_end', type=float, default=0.01)
     parser.add_argument('--length_of_day', type=int, default=24)
+    parser.add_argument('--buffer_size', type=int, default=int(1e5), help="replay buffer size")
+    parser.add_argument('--batch_size', type=int, default=32, help="minibatch size for DQN")
+    parser.add_argument('--tau', type=float, default=1e-3, help="for soft update of target parameters")
+    parser.add_argument('--lr', type=float, default=5e-4, help="learning rate for DQN")
+    parser.add_argument('--update_freq', type=int, default=4, help="how often to update the network")
 
     args = parser.parse_args()
     return args
@@ -54,24 +59,25 @@ def main():
     
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    agent2 = DQNAgent(state_size=1, action_size=der.nb_actions(), gamma=gamma, n_epochs=args.n_epochs,
+    agent2 = DQNAgent(state_dim=2, action_size=der.nb_actions(), gamma=gamma, n_epochs=args.n_epochs,
                       eps_start=args.eps_start, eps_decay=args.eps_decay, eps_end=args.eps_end,
-                      seed=args.seed, demand=der.energy_dem, h_demand=der.h_demand, price_penalty=args.penalty_factor, device=device)
+                      seed=args.seed, demand=der.energy_dem, h_demand=der.h_demand, price_penalty=args.penalty_factor, 
+                      device=device, buffer_size=args.buffer_size, batch_size=args.batch_size, tau=args.tau, lr=args.lr, update_freq=args.update_freq)
 
     
-    agent = agent1
-    a_scores = agent.run(args.length_of_day, market, der, train=True)
-    # a1_scores = agent1.learn(args.length_of_day, market, der)
-    # a2_scores = agent2.learn(args.length_of_day, market, der)
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111)
-    # ax.plot(list(range(len(a1_scores))), a1_scores, label="Q Learning")
-    # ax.plot(list(range(len(a2_scores))), a2_scores, label="DQN")
-    # ax.set_ylabel('Score')
-    # ax.set_xlabel('Epsiode #')
-    # ax.legend()
-    # ax.set_title("Training Curves")
-    # plt.show()
+    agent = agent2
+    # a_scores = agent.run(args.length_of_day, market, der, train=True)
+    a1_scores = agent1.run(args.length_of_day, market, der, train=True)
+    a2_scores = agent2.run(args.length_of_day, market, der, train=True)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(list(range(len(a1_scores))), a1_scores, label="Q Learning")
+    ax.plot(list(range(len(a2_scores))), a2_scores, label="DQN")
+    ax.set_ylabel('Score')
+    ax.set_xlabel('Epsiode #')
+    ax.legend()
+    ax.set_title("Training Curves")
+    plt.show()
 
     # =======================================
     # eval
