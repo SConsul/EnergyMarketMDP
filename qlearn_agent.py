@@ -24,7 +24,7 @@ class q_learning_agent(Agent):
         self.update(s, action, reward, ns)
 
     def act(self, hr, bat_lvl, power_supplied,power_cap,energy_cap, demand):
-        rand_v = np.random.uniform(0,1)
+        rand_v = random.uniform(0,1)
         bat_lvl = int(bat_lvl)
         s = hr*400 + bat_lvl
         if rand_v < self.eps:
