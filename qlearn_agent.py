@@ -16,6 +16,7 @@ class q_learning_agent(Agent):
         self.n_epochs = n_epochs
 
     def update(self,s,a,r,sp):
+        # print(s,a,sp)
         self.Q[s,a] += self.alpha*(r + self.gamma*max(self.Q[sp,:]) - self.Q[s, a])
     
     def step(self, state, action, reward, next_state):
@@ -32,9 +33,9 @@ class q_learning_agent(Agent):
         else:
             a = np.argmax(self.Q[s])
 
-        if bat_lvl + (a-power_cap) + power_supplied - demand < 0:
-            a = power_cap - bat_lvl - power_supplied + demand
-        elif bat_lvl + (a-power_cap) + power_supplied - demand > energy_cap:
-            a = energy_cap + power_cap - bat_lvl - power_supplied + demand
+        # if bat_lvl + (a-power_cap) + power_supplied - demand < 0:
+        #     a = power_cap - bat_lvl - power_supplied + demand
+        # elif bat_lvl + (a-power_cap) + power_supplied - demand > energy_cap:
+        #     a = energy_cap + power_cap - bat_lvl - power_supplied + demand
             
         return a

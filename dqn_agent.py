@@ -67,10 +67,10 @@ class DQNAgent(Agent):
         else:
             a = random.choice(np.arange(self.action_size))
 
-        if bat_lvl + (a-power_cap) + power_supplied - demand < 0:
-            a = power_cap - bat_lvl - power_supplied + demand
-        elif bat_lvl + (a-power_cap) + power_supplied - demand > energy_cap:
-            a = energy_cap + power_cap - bat_lvl - power_supplied + demand
+        # if bat_lvl + (a-power_cap) + power_supplied - demand < 0:
+        #     a = power_cap - bat_lvl - power_supplied + demand
+        # elif bat_lvl + (a-power_cap) + power_supplied - demand > energy_cap:
+        #     a = energy_cap + power_cap - bat_lvl - power_supplied + demand
         
         self.eps = max(self.eps*self.eps_decay, self.eps_end)
         return a

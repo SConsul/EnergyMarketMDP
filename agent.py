@@ -9,7 +9,7 @@ import math
 class Agent(object):
 
     #State Index bat_lvl [0,399], hr [0 23] -> hr*400 + bat_lvl [0 9599]
-    def run(self, k, market, der, train=True, episode_id=None):
+    def run(self, k, market, der, epoch_freq, train=True, episode_id=None):
 
         epoch_scores = [] # list containing score from each episode
         episode_list = list(range(23))
@@ -40,12 +40,12 @@ class Agent(object):
                     state = hr*400+bat_lvl
                     price, power_supplied = market.step(i_episode)
                     power_supplied = int(power_supplied)
-                    action = self.act(hr, bat_lvl ,power_supplied, power_cap,energy_cap, self.demand)
+                    action = self.act(hr, bat_lvl ,power_supplied, power_cap,energy_cap, self.demand*min(1.0,(hr+1)/self.h_demand))
                     reward = -1*(action-power_cap)*price
 
-                    if market.t <= self.h_demand and bat_lvl<self.demand:
-                        reward -= (self.demand-bat_lvl)*price*self.price_penalty*market.t/self.h_demand
-                    new_bat_lvl = bat_lvl + (action-power_cap) + power_supplied
+                    if hr <= self.h_demand and bat_lvl<self.demand*min(1.0,hr/self.h_demand):
+                        reward -= (self.demand-bat_lvl)*price*self.price_penalty*hr/self.h_demand
+                    new_bat_lvl = min(energy_cap, max(0,bat_lvl + (action-power_cap) + power_supplied))
                     new_hr = (hr+1)%24
 
                     if train:
@@ -65,10 +65,11 @@ class Agent(object):
             epoch_score = statistics.fmean(scores)
             epoch_scores.append(epoch_score)
             
-            if train:
-                print('Epoch {}\t Average Score {:.2f}'.format(epoch,epoch_score))
-            else:
-                print('Average Score {:.2f}'.format(epoch_score))
+            if (epoch+1)%epoch_freq==0:
+                if train:
+                    print('Epoch {}\t Average Score {:.2f}'.format(epoch+1,epoch_score))
+                else:
+                    print('Average Score {:.2f}'.format(epoch_score))
         if train:
             return epoch_scores
         return scores
