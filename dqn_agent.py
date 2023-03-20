@@ -62,33 +62,25 @@ class DQNAgent(Agent):
         self.qnetwork_local.train()
 
         #Epsilon -greedy action selction
-        if random.random() > self.eps:
-            a = np.argmax(action_values.cpu().data.numpy())
+        if random.random() < self.eps:
+            a = random.randint(0,self.action_size-1) #random.choice(np.arange(self.action_size))
         else:
-            a = random.choice(np.arange(self.action_size))
-
-        # if bat_lvl + (a-power_cap) + power_supplied - demand < 0:
-        #     a = power_cap - bat_lvl - power_supplied + demand
-        # elif bat_lvl + (a-power_cap) + power_supplied - demand > energy_cap:
-        #     a = energy_cap + power_cap - bat_lvl - power_supplied + demand
+            a = np.argmax(action_values.cpu().data.numpy())
         
         self.eps = max(self.eps*self.eps_decay, self.eps_end)
         return a
     
     def update(self, states, actions, rewards, next_state):
-        """Update value parameters using given batch of experience tuples.
-        """
-        ## compute and minimize the loss
+        """Update value parameters using given batch of experience tuples."""
         criterion = torch.nn.MSELoss()
         self.qnetwork_local.train() #train mode
-        # So that when we do a forward pass with target model it does not calculate gradient.
         # We will update target model weights with soft_update function
         self.qnetwork_target.eval() # eval mode 
         #shape of output from the model (batch_size,action_dim) = (64,4)
         predicted_targets = self.qnetwork_local(states).gather(1,actions)
     
         with torch.no_grad():
-            labels_next = self.qnetwork_target(next_state).detach().max(1)[0].unsqueeze(1)
+            labels_next = self.qnetwork_target(next_state).detach().max()
 
         # .detach() ->  Returns a new Tensor, detached from the current graph.
         labels = rewards + (self.gamma* labels_next)
