@@ -80,12 +80,12 @@ def main():
     a_scores = agent.run(args.length_of_day, market, der, args.epoch_freq, train=True)
 
     fig = plt.figure()
-    ax = fig.add_subplot(111)
+    ax = fig.add_subplot()
     ax.plot(list(range(len(a_scores))), a_scores)
     ax.set_ylabel('Score of Agent {}'.format(args.agent_id))
     ax.set_xlabel('Episode #')
     ax.legend()
-    ax.set_title("Training Curves")
+    ax.set_title('Training curve for Agent {}'.format(args.agent_id))
     plt.show()
     
     num_eps_total = len(os.listdir("./data/data_demand"))
@@ -105,10 +105,10 @@ def main():
     
     surplus = list(np.array(s_list) - bat_lvl_desired)
 
-    ax2.plot(hr_list, ps_list, label='solar power', color='tab:blue')
-    ax2.plot(hr_list, a_list, label='actions', color='tab:orange')
-    ax2.plot(hr_list, s_list, label='battery level', color='tab:green')
-    ax2.plot(hr_list, surplus, label='surplus', color='tab:purple')
+    ax2.plot(hr_list, ps_list, label='Solar Power', color='tab:blue')
+    ax2.plot(hr_list, a_list, label='Action', color='tab:orange')
+    ax2.plot(hr_list, s_list, label='Battery Level', color='tab:green')
+    ax2.plot(hr_list, surplus, label='Surplus', color='tab:purple')
     fig.suptitle('Performance of Agent {} on Episode {}'.format(args.agent_id, episode_id))
     fig.tight_layout()
     plt.legend()
