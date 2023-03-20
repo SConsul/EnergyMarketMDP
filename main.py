@@ -79,6 +79,15 @@ def main():
 
     a_scores = agent.run(args.length_of_day, market, der, args.epoch_freq, train=True)
 
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(list(range(len(a_scores))), a_scores)
+    ax.set_ylabel('Score of Agent {}'.format(args.agent_id))
+    ax.set_xlabel('Episode #')
+    ax.legend()
+    ax.set_title("Training Curves")
+    plt.show()
+    
     num_eps_total = len(os.listdir("./data/data_demand"))
     episode_id = random.randint(0, num_eps_total-1)
     s_list, a_list, ps_list, _, p_list = agent.run(args.length_of_day, market, der, args.epoch_freq, False, episode_id)
@@ -100,7 +109,7 @@ def main():
     ax2.plot(hr_list, a_list, label='actions', color='tab:orange')
     ax2.plot(hr_list, s_list, label='battery level', color='tab:green')
     ax2.plot(hr_list, surplus, label='surplus', color='tab:purple')
-    fig.suptitle('Performance of Agent {} on Episode {}'.format(agent_id, episode_id))
+    fig.suptitle('Performance of Agent {} on Episode {}'.format(args.agent_id, episode_id))
     fig.tight_layout()
     plt.legend()
     plt.show()
