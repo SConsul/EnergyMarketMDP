@@ -53,14 +53,14 @@ def main():
                               n_epochs=args.n_epochs)
     
 
-    # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    # agent2 = DQNAgent(state_size=1, action_size=der.nb_actions(), gamma=gamma, n_epochs=args.n_epochs,
-    #                   eps_start=args.eps_start, eps_decay=args.eps_decay, eps_end=args.eps_end,
-    #                   seed=args.seed, demand=der.energy_dem, h_demand=der.h_demand, price_penalty=args.penalty_factor, device=device)
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    agent2 = DQNAgent(state_size=1, action_size=der.nb_actions(), gamma=gamma, n_epochs=args.n_epochs,
+                      eps_start=args.eps_start, eps_decay=args.eps_decay, eps_end=args.eps_end,
+                      seed=args.seed, demand=der.energy_dem, h_demand=der.h_demand, price_penalty=args.penalty_factor, device=device)
 
     
     agent = agent1
-    a_scores = agent.learn(args.length_of_day, market, der)
+    a_scores = agent.run(args.length_of_day, market, der, train=True)
     # a1_scores = agent1.learn(args.length_of_day, market, der)
     # a2_scores = agent2.learn(args.length_of_day, market, der)
     # fig = plt.figure()
@@ -76,8 +76,8 @@ def main():
     # =======================================
     # eval
 
-    # a1_eval_score = agent1.eval(args.length_of_day, market, der)
-    # a2_eval_score = agent2.eval(args.length_of_day, market, der)
+    a1_eval_score = agent1.run(args.length_of_day, market, der, train=False)
+    # a2_eval_score = agent2.run(args.length_of_day, market, der, train=False)
 
     # df = pd.DataFrame({'Episode': list(range(args.length_of_day-1))+list(range(args.length_of_day-1)),
     #                   'score': a1_eval_score+a2_eval_score, 'type': ['Q Learning']*(args.length_of_day-1) + ['DQN']*(args.length_of_day-1)})
@@ -95,9 +95,7 @@ def main():
     num_eps_total = len(os.listdir("./data/data_demand"))
     episode_id = random.randint(0, num_eps_total-1)
     print("Episode"+str(episode_id))
-    s_list, a_list, ps_list, _, p_list = agent.track_episode(
-        24, episode_id, market, der)
-
+    s_list, a_list, ps_list, _, p_list = agent.run(args.length_of_day, market, der, False, episode_id)
     hr_list = list(range(len(s_list)))
     fig, ax1 = plt.subplots()
     ax1.set_xlabel('time (h)')
